@@ -20,7 +20,7 @@ impl Database for Firewood {
     async fn open(datadir: String) -> Result<Self, String> {
         let cfg = DbConfig::builder()
             .truncate(false)
-            .wal(WalConfig::builder().max_revisions(10).build());
+            .wal(WalConfig::builder().max_revisions(100).build());
 
         match Db::new(datadir, &cfg.build()).await {
             Ok(db) => Ok(Firewood {
@@ -35,6 +35,13 @@ impl Database for Firewood {
         let root_hash = match self.db.root_hash().await {
             Ok(hash) => hash,
             Err(e) => return Err(format!("Failed to get root hash: {}", e)),
+        };
+
+        // Empty Tree
+        if hex::encode(root_hash)
+            == "56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421"
+        {
+            return Ok(None);
         };
 
         let rev = match self.db.revision(root_hash).await {

@@ -6,10 +6,11 @@ use runner::Runner;
 mod database;
 mod firewood;
 pub mod runner;
+mod stat;
 mod utils;
 
 #[derive(Parser, Debug)]
-#[command(name = "bspt", version, about, long_about = None)]
+#[command(name = "bsperftool", version, about, long_about = None)]
 struct Args {
     #[arg(short, long)]
     engine: String,
@@ -20,8 +21,17 @@ struct Args {
     #[arg(short = 'b', long = "bs", default_value_t = 3000)]
     batch_size: u32,
 
-    #[arg(short = 'j', long = "numjobs", default_value_t = 10)]
+    #[arg(short = 'j', long = "num_jobs", default_value_t = 10)]
     num_jobs: usize,
+
+    #[arg(short = 'r', long = "key_range", default_value_t = 100000000)]
+    key_range: u64,
+
+    #[arg(short = 'm', long = "min_value_size", default_value_t = 300)]
+    min_value_size: u32,
+
+    #[arg(short = 'M', long = "max_value_size", default_value_t = 300)]
+    max_value_size: u32,
 }
 
 #[tokio::main]
@@ -33,7 +43,10 @@ async fn main() {
     match args.engine.as_str() {
         "firewood" => {
             match Firewood::open(args.datadir.clone()).await {
-                Ok(db) => run(db, args).await,
+                Ok(db) => {
+                    println!("Open firewood success");
+                    run(db, args).await;
+                }
                 Err(e) => println!("Failed to open firewood database: {}", e),
             };
         }
@@ -47,6 +60,13 @@ async fn run<T>(db: T, args: Args)
 where
     T: Database + Send + Sync + 'static,
 {
-    let runner = Runner::new(db, args.batch_size, args.num_jobs, 10000, 300, 300);
+    let runner = Runner::new(
+        db,
+        args.batch_size,
+        args.num_jobs,
+        args.key_range,
+        args.min_value_size,
+        args.max_value_size,
+    );
     runner.run().await;
 }
