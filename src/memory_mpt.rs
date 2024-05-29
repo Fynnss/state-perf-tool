@@ -17,26 +17,26 @@ impl Database for MemoryMPT {
         Ok(MemoryMPT { eth_trie: trie })
     }
 
-    async fn get(&self, key: [u8; 32]) -> Result<Option<Vec<u8>>, String> {
+    async fn get(&self, key: &[u8; 32]) -> Result<Option<Vec<u8>>, String> {
         let trie = self.eth_trie.read().await;
 
-        match trie.get(&key) {
+        match trie.get(key) {
             Ok(val) => Ok(val),
             Err(e) => return Err(format!("failed to get from trie: {}", e)),
         }
     }
 
-    async fn put(&self, key: [u8; 32], val: Vec<u8>) {
+    async fn put(&self, key: &[u8; 32], val: Vec<u8>) {
         let mut trie = self.eth_trie.write().await;
 
-        if let Err(e) = trie.insert(&key, &val) {
+        if let Err(e) = trie.insert(key, &val) {
             println!("failed to put into trie: {}", e)
         }
     }
 
-    async fn delete(&self, key: [u8; 32]) {
+    async fn delete(&self, key: &[u8; 32]) {
         let mut trie = self.eth_trie.write().await;
-        if let Err(e) = trie.remove(&key) {
+        if let Err(e) = trie.remove(key) {
             println!("failed to put into trie: {}", e)
         }
     }

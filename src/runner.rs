@@ -8,7 +8,7 @@ use futures::future::join_all;
 
 use crate::database::Database;
 use crate::stat::Stat;
-use crate::utils::{generate_key, generate_value};
+use crate::utils::{generate_key, generate_value, random_ratio};
 
 pub struct Runner<T>
 where
@@ -20,6 +20,7 @@ where
     key_range: u64,
     min_value_size: u32,
     max_value_size: u32,
+    delete_ratio: f64,
     stat: Arc<Stat>,
     last_stat_time: Mutex<Instant>,
 }
@@ -35,6 +36,7 @@ where
         key_range: u64,
         min_value_size: u32,
         max_value_size: u32,
+        delete_ratio: f64,
     ) -> Self {
         Self {
             db: Arc::new(db),
@@ -45,6 +47,7 @@ where
             max_value_size,
             stat: Arc::new(Stat::new()),
             last_stat_time: Mutex::new(Instant::now()),
+            delete_ratio,
         }
     }
 
@@ -71,13 +74,22 @@ where
         let key_range = self.key_range;
         let min_value_size = self.min_value_size;
         let max_value_size = self.max_value_size;
+        let delete_ratio = self.delete_ratio;
         let tasks = (0..self.batch_size)
             .map(|_| {
                 let db = Arc::clone(&self.db);
                 let stat = Arc::clone(&self.stat);
                 let permit = semaphore.clone().acquire_owned();
                 tokio::spawn(async move {
-                    task(db, key_range, min_value_size, max_value_size, stat).await;
+                    task(
+                        db,
+                        key_range,
+                        min_value_size,
+                        max_value_size,
+                        delete_ratio,
+                        stat,
+                    )
+                    .await;
                     drop(permit);
                 })
             })
@@ -116,6 +128,7 @@ async fn task<T>(
     key_range: u64,
     min_value_size: u32,
     max_value_size: u32,
+    delete_ratio: f64,
     stat: Arc<Stat>,
 ) where
     T: Database + Send + Sync + 'static,
@@ -123,17 +136,24 @@ async fn task<T>(
     let range = 0..key_range;
     let key = generate_key(range);
     let db = Arc::clone(&db);
-    match db.get(key).await {
-        Ok(Some(val)) => {
-            db.put(key, val).await;
-            stat.inc_put(1);
+    match db.get(&key).await {
+        Ok(Some(_)) => {
             stat.inc_get(1);
+            if random_ratio() < delete_ratio {
+                db.delete(&key).await;
+                stat.inc_delete(1)
+            } else {
+                let value = generate_value(min_value_size, max_value_size);
+                db.put(&key, value).await;
+                stat.inc_put(1);
+            }
         }
         Ok(None) => {
-            let value = generate_value(min_value_size, max_value_size);
-            db.put(key, value).await;
-            stat.inc_put(1);
             stat.inc_get(1);
+            stat.inc_get_notexist(1);
+            let value = generate_value(min_value_size, max_value_size);
+            db.put(&key, value).await;
+            stat.inc_put(1);
         }
         Err(e) => {
             let key_str = String::from_utf8_lossy(&key);

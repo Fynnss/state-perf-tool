@@ -34,6 +34,9 @@ struct Args {
 
     #[arg(short = 'M', long = "max_value_size", default_value_t = 300)]
     max_value_size: u32,
+
+    #[arg(short = 'M', long = "max_value_size", default_value_t = 0.2)]
+    delete_ratio: f64,
 }
 
 #[tokio::main]
@@ -78,6 +81,7 @@ where
         args.key_range,
         args.min_value_size,
         args.max_value_size,
+        args.delete_ratio,
     );
     runner.run().await;
 }

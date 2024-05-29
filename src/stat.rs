@@ -1,3 +1,4 @@
+use core::f64;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 
@@ -9,6 +10,7 @@ pub struct Stat {
 struct IOStat {
     get: AtomicU64,
     put: AtomicU64,
+    get_not_exist: AtomicU64,
     delete: AtomicU64,
 }
 
@@ -19,11 +21,13 @@ impl Stat {
                 get: AtomicU64::new(0),
                 put: AtomicU64::new(0),
                 delete: AtomicU64::new(0),
+                get_not_exist: AtomicU64::new(0),
             },
             last_io_stat: IOStat {
                 get: AtomicU64::new(0),
                 put: AtomicU64::new(0),
                 delete: AtomicU64::new(0),
+                get_not_exist: AtomicU64::new(0),
             },
         }
     }
@@ -32,6 +36,7 @@ impl Stat {
         let get = self.io_stat.get.load(Ordering::SeqCst);
         let put = self.io_stat.put.load(Ordering::SeqCst);
         let delete = self.io_stat.delete.load(Ordering::SeqCst);
+        let get_not_exist = self.io_stat.get_not_exist.load(Ordering::SeqCst);
 
         let delta_f64 = delta.as_secs_f64();
 
@@ -39,15 +44,21 @@ impl Stat {
         let put_tps = (put - self.last_io_stat.put.load(Ordering::SeqCst)) as f64 / delta_f64;
         let delete_tps =
             (delete - self.last_io_stat.delete.load(Ordering::SeqCst)) as f64 / delta_f64;
+        let get_not_exist_tps =
+            (get_not_exist - self.last_io_stat.get_not_exist.load(Ordering::SeqCst)) as f64
+                / delta_f64;
 
         // keep io stat snapshot
         self.last_io_stat.get.store(get, Ordering::SeqCst);
         self.last_io_stat.put.store(put, Ordering::SeqCst);
         self.last_io_stat.delete.store(delete, Ordering::SeqCst);
+        self.last_io_stat
+            .get_not_exist
+            .store(get_not_exist, Ordering::SeqCst);
 
         format!(
-            "tps: [get={:.2}, put={:.2}, delete={:.2}]",
-            get_tps, put_tps, delete_tps
+            "tps: [get={:.2}, put={:.2}, delete={:.2}, get_not_exist={:.2}]",
+            get_tps, put_tps, delete_tps, get_not_exist_tps
         )
     }
 
@@ -58,8 +69,11 @@ impl Stat {
     pub fn inc_get(&self, num: u64) {
         self.io_stat.get.fetch_add(num, Ordering::SeqCst);
     }
+    pub fn inc_get_notexist(&self, num: u64) {
+        self.io_stat.get_not_exist.fetch_add(num, Ordering::SeqCst);
+    }
 
-    // pub fn inc_delete(&self, num: u32) {
-    //     self.io_stat.delete.fetch_add(num, Ordering::SeqCst);
-    // }
+    pub fn inc_delete(&self, num: u64) {
+        self.io_stat.delete.fetch_add(num, Ordering::SeqCst);
+    }
 }

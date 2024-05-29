@@ -1,8 +1,8 @@
-use rand::Rng;
+use rand::{thread_rng, Rng};
 use std::ops::Range;
 
 pub fn generate_key(range: Range<u64>) -> [u8; 32] {
-    let random_num = rand::thread_rng().gen_range(range);
+    let random_num = thread_rng().gen_range(range);
     ethers::core::utils::keccak256(random_num.to_string().as_bytes())
 }
 
@@ -12,4 +12,9 @@ pub fn generate_value(min_len: u32, max_len: u32) -> Vec<u8> {
         len = rand::thread_rng().gen_range(min_len..max_len)
     }
     (0..len).map(|_| rand::thread_rng().gen()).collect()
+}
+
+pub fn random_ratio() -> f64 {
+    let mut rng = thread_rng();
+    rng.gen()
 }

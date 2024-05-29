@@ -31,7 +31,7 @@ impl Database for Firewood {
         }
     }
 
-    async fn get(&self, key: [u8; 32]) -> Result<Option<Vec<u8>>, String> {
+    async fn get(&self, key: &[u8; 32]) -> Result<Option<Vec<u8>>, String> {
         let root_hash = match self.db.root_hash().await {
             Ok(hash) => hash,
             Err(e) => return Err(format!("Failed to get root hash: {}", e)),
@@ -55,7 +55,7 @@ impl Database for Firewood {
         }
     }
 
-    async fn put(&self, key: [u8; 32], val: Vec<u8>) {
+    async fn put(&self, key: &[u8; 32], val: Vec<u8>) {
         let mut vec = self.batch.lock().await;
         vec.push(BatchOp::Put {
             key: key.to_vec(),
@@ -63,7 +63,7 @@ impl Database for Firewood {
         })
     }
 
-    async fn delete(&self, key: [u8; 32]) {
+    async fn delete(&self, key: &[u8; 32]) {
         let mut vec = self.batch.lock().await;
         vec.push(BatchOp::Delete { key: key.to_vec() })
     }
