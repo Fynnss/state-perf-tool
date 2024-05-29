@@ -137,7 +137,7 @@ async fn task<T>(
         }
         Err(e) => {
             let key_str = String::from_utf8_lossy(&key);
-            println!("task get failed, key = {}, err= {}", key_str.to_string(), e)
+            println!("task get failed, key = {}, err= {}", key_str, e)
         }
     }
 }

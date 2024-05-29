@@ -1,10 +1,12 @@
 use crate::database::Database;
 use clap::Parser;
 use firewood::Firewood;
+use memory_mpt::MemoryMPT;
 use runner::Runner;
 
 mod database;
 mod firewood;
+mod memory_mpt;
 pub mod runner;
 mod stat;
 mod utils;
@@ -45,6 +47,15 @@ async fn main() {
             match Firewood::open(args.datadir.clone()).await {
                 Ok(db) => {
                     println!("Open firewood success");
+                    run(db, args).await;
+                }
+                Err(e) => println!("Failed to open firewood database: {}", e),
+            };
+        }
+        "memorydb" => {
+            match MemoryMPT::open(args.datadir.clone()).await {
+                Ok(db) => {
+                    println!("Open memory MPT success");
                     run(db, args).await;
                 }
                 Err(e) => println!("Failed to open firewood database: {}", e),

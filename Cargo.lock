@@ -1015,6 +1015,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "eth_trie"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ec3aeb0284b473041df2419a28e3cdf0c64a78d2b9511af4b6e40bad3964b172"
+dependencies = [
+ "ethereum-types",
+ "hashbrown 0.14.5",
+ "keccak-hash",
+ "log",
+ "parking_lot",
+ "rlp",
+]
+
+[[package]]
 name = "ethabi"
 version = "18.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2016,6 +2030,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ecc2af9a1119c51f12a14607e783cb977bde58bc069ff0c3da1095e635d70654"
 dependencies = [
  "cpufeatures",
+]
+
+[[package]]
+name = "keccak-hash"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4b286e6b663fb926e1eeb68528e69cb70ed46c6d65871a21b2215ae8154c6d3c"
+dependencies = [
+ "primitive-types",
+ "tiny-keccak",
 ]
 
 [[package]]
@@ -3266,6 +3290,7 @@ dependencies = [
  "clap",
  "ctrlc",
  "env_logger",
+ "eth_trie",
  "ethers",
  "firewood",
  "futures",

@@ -45,10 +45,10 @@ impl Stat {
         self.last_io_stat.put.store(put, Ordering::SeqCst);
         self.last_io_stat.delete.store(delete, Ordering::SeqCst);
 
-        return format!(
+        format!(
             "tps: [get={:.2}, put={:.2}, delete={:.2}]",
             get_tps, put_tps, delete_tps
-        );
+        )
     }
 
     pub fn inc_put(&self, num: u64) {
