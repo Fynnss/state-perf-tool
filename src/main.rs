@@ -35,7 +35,7 @@ struct Args {
     #[arg(short = 'M', long = "max_value_size", default_value_t = 300)]
     max_value_size: u32,
 
-    #[arg(short = 'M', long = "max_value_size", default_value_t = 0.2)]
+    #[arg(short = 'd', long = "delete_ratio", default_value_t = 0.2)]
     delete_ratio: f64,
 }
 
