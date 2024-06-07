@@ -1,12 +1,12 @@
 use crate::database::Database;
 use clap::Parser;
+use eth_trie::MemoryMPT;
 use firewood::Firewood;
-use memory_mpt::MemoryMPT;
 use runner::Runner;
 
 mod database;
+mod eth_trie;
 mod firewood;
-mod memory_mpt;
 pub mod runner;
 mod stat;
 mod utils;
